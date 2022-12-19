@@ -1,0 +1,11 @@
+# Taken from https://kubernetes.io/docs/tasks/access-kubernetes-api/custom-resources/custom-resource-definitions/#create-custom-objects
+apiVersion: "meinetoonen.nl/v1"
+kind: LocalNode
+metadata:
+  name: apollo
+spec:
+  name: apollo
+  ipAddress: 192.168.68.118
+  type: AMD
+  cpu: 4
+  memory: 32
