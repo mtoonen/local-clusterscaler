@@ -15,7 +15,7 @@ spec:
             spec:
               type: object
               properties:
-                ipAddress:
+                macAddress:
                   type: string
                 name:
                   type: string
@@ -36,7 +36,6 @@ spec:
       subresources:
         # status enables the status subresource.
         status: {}
-        # scale enables the scale subresource.
 
   scope: Namespaced
   names:

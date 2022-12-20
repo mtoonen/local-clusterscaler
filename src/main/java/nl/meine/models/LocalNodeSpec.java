@@ -4,8 +4,7 @@ import io.fabric8.kubernetes.api.model.KubernetesResource;
 
 public class LocalNodeSpec implements KubernetesResource {
 
-    private String ipAddress;
-
+    private String macAddress;
     private String name;
 
     private String type;
@@ -14,13 +13,6 @@ public class LocalNodeSpec implements KubernetesResource {
 
     private Integer memory;
 
-    public String getIpAddress() {
-        return ipAddress;
-    }
-
-    public void setIpAddress(String ipAddress) {
-        this.ipAddress = ipAddress;
-    }
 
     public String getName() {
         return name;
@@ -54,10 +46,18 @@ public class LocalNodeSpec implements KubernetesResource {
         this.memory = memory;
     }
 
+    public String getMacAddress() {
+        return macAddress;
+    }
+
+    public void setMacAddress(String macAddress) {
+        this.macAddress = macAddress;
+    }
+
     @Override
     public String toString() {
         return "LocalNodeSpec{" +
-                "ipAddress='" + ipAddress + '\'' +
+                "macAddress='" + macAddress + '\'' +
                 ", name='" + name + '\'' +
                 ", type='" + type + '\'' +
                 ", cpu=" + cpu +

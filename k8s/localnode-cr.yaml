@@ -5,7 +5,7 @@ metadata:
   name: apollo
 spec:
   name: apollo
-  ipAddress: 192.168.68.118
+  macAddress: 192.168.68.118
   type: AMD
   cpu: 4
   memory: 32

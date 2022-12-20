@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: local-clusterscaler
+spec:
+  selector:
+    matchLabels:
+      app: local-clusterscaler
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: local-clusterscaler
+    spec:
+      serviceAccountName: local-clusterscaler
+      containers:
+        - image: meinetoonen/local-clusterscaler
+          name: local-clusterscaler
+          imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: "0.2"
+              memory: 200M
+            requests:
+              cpu: "0.1"
+              memory: 100M
