@@ -7,12 +7,13 @@ public class LocalNodeSpec implements KubernetesResource {
     private String macAddress;
     private String name;
 
-    private String type;
+    private Architecture architecture;
 
-    private Integer cpu;
+    private String username;
 
-    private Integer memory;
+    private String password;
 
+    private boolean scaleDownProtected = false;
 
     public String getName() {
         return name;
@@ -22,28 +23,12 @@ public class LocalNodeSpec implements KubernetesResource {
         this.name = name;
     }
 
-    public String getType() {
-        return type;
+    public Architecture getArchitecture() {
+        return architecture;
     }
 
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public Integer getCpu() {
-        return cpu;
-    }
-
-    public void setCpu(Integer cpu) {
-        this.cpu = cpu;
-    }
-
-    public Integer getMemory() {
-        return memory;
-    }
-
-    public void setMemory(Integer memory) {
-        this.memory = memory;
+    public void setArchitecture(Architecture architecture) {
+        this.architecture = architecture;
     }
 
     public String getMacAddress() {
@@ -54,14 +39,36 @@ public class LocalNodeSpec implements KubernetesResource {
         this.macAddress = macAddress;
     }
 
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public boolean isScaleDownProtected() {
+        return scaleDownProtected;
+    }
+
+    public void setScaleDownProtected(boolean scaleDownProtected) {
+        this.scaleDownProtected = scaleDownProtected;
+    }
+
     @Override
     public String toString() {
         return "LocalNodeSpec{" +
                 "macAddress='" + macAddress + '\'' +
                 ", name='" + name + '\'' +
-                ", type='" + type + '\'' +
-                ", cpu=" + cpu +
-                ", memory=" + memory +
+                ", architecture=" + architecture +
                 '}';
     }
 }

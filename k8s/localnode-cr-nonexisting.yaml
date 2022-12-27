@@ -2,9 +2,9 @@
 apiVersion: "meinetoonen.nl/v1"
 kind: LocalNode
 metadata:
-  name: apollo
+  name: ikbestaniet
 spec:
-  name: apollo
+  name: ikbestaniet
   macAddress: 192.168.68.118
   architecture: amd64
   username: waker

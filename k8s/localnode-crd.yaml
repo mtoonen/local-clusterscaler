@@ -19,19 +19,19 @@ spec:
                   type: string
                 name:
                   type: string
-                type:
+                architecture:
                   type: string
-                cpu:
-                  type: integer
-                memory:
-                  type: integer
+                scaleDownProtected:
+                  type: boolean
+                username:
+                  type: string
+                password:
+                  type: string
             status:
               type: object
               properties:
-                replicas:
-                  type: integer
-                labelSelector:
-                  type: string
+                running:
+                  type: boolean
       # subresources describes the subresources for custom resources.
       subresources:
         # status enables the status subresource.

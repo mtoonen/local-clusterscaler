@@ -4,21 +4,20 @@ package nl.meine.models;
 import io.fabric8.kubernetes.api.model.KubernetesResource;
 
 public class LocalNodeStatus implements KubernetesResource  {
+    private boolean running = false;
 
-    public String getLabelSelector() {
-        return labelSelector;
+    public boolean isRunning() {
+        return running;
     }
 
-    public void setLabelSelector(String labelSelector) {
-        this.labelSelector = labelSelector;
+    public void setRunning(boolean running) {
+        this.running = running;
     }
-
-    private String labelSelector;
 
     @Override
     public String toString() {
         return "LocalNodeStatus{" +
-                " , labelSelector='" + labelSelector + "'" +
-                "}";
+                "running=" + running +
+                '}';
     }
 }

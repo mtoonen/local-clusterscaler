@@ -1,0 +1,3 @@
+Test verwijderen van custom resource node
+
+fix opstarten van scaler, dat er dan niet geschaald wordt

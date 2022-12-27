@@ -1,15 +1,25 @@
 package nl.meine;
 
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
+import io.fabric8.kubernetes.api.model.Node;
+import io.fabric8.kubernetes.api.model.runtime.RawExtension;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.WatcherException;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
+import nl.meine.models.Architecture;
 import nl.meine.models.LocalNode;
+import nl.meine.models.LocalNodeSpec;
+import nl.meine.models.LocalNodeStatus;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @ApplicationScoped
@@ -17,11 +27,20 @@ public class LocalNodeResourceCache {
 
     private final Map<String, LocalNode> cache = new ConcurrentHashMap<>();
 
+    private final Map<Architecture, Set<LocalNode>> nodesByArchitecture = new ConcurrentHashMap<>();
+
     @Inject
     MixedOperation<LocalNode, KubernetesResourceList<LocalNode>, Resource<LocalNode>> localNodeClient;
 
+    @Inject
+    KubernetesClient client;
+
     public LocalNode get(String uid) {
         return cache.get(uid);
+    }
+
+    public Set<LocalNode> getByArchitecture(Architecture arch) {
+        return nodesByArchitecture.get(arch);
     }
 
     public void listThenWatch() {
@@ -34,8 +53,21 @@ public class LocalNodeResourceCache {
                     .list()
                     .getItems()
                     .forEach(resource -> {
-                                cache.put(resource.getMetadata().getUid(), resource);
-                                String uid = resource.getMetadata().getUid();
+                                String name = resource.getMetadata().getName();
+
+                                cache.put(name, resource);
+                                Object lnsObj = resource.getSpec();
+                                LocalNodeSpec lns = convertSpec((RawExtension) lnsObj);
+                                resource.setSpec(lns);
+
+                                LocalNodeStatus status = new LocalNodeStatus();
+                                status.setRunning(isRunning(name));
+                                resource.setStatus(status);
+
+                                Architecture architecture = lns.getArchitecture();
+                                nodesByArchitecture.putIfAbsent(architecture, new HashSet<>());
+                                nodesByArchitecture.get(architecture).add(resource);
+
                             }
                     );
 
@@ -45,9 +77,19 @@ public class LocalNodeResourceCache {
                 @Override
                 public void eventReceived(Action action, LocalNode resource) {
                     try {
-                        String uid = resource.getMetadata().getUid();
-                        if (cache.containsKey(uid)) {
-                            int knownResourceVersion = Integer.parseInt(cache.get(uid).getMetadata().getResourceVersion());
+                        Object lnsObj = resource.getSpec();
+                        LocalNodeSpec lns = convertSpec((RawExtension) lnsObj);
+                        resource.setSpec(lns);
+
+                        String name = resource.getSpec().getName();
+
+                        LocalNodeStatus status = new LocalNodeStatus();
+                        status.setRunning(isRunning(name));
+                        resource.setStatus(status);
+
+                        Architecture architecture = resource.getSpec().getArchitecture();
+                        if (cache.containsKey(name)) {
+                            int knownResourceVersion = Integer.parseInt(cache.get(name).getMetadata().getResourceVersion());
                             int receivedResourceVersion = Integer.parseInt(resource.getMetadata().getResourceVersion());
                             if (knownResourceVersion > receivedResourceVersion) {
                                 return;
@@ -55,9 +97,11 @@ public class LocalNodeResourceCache {
                         }
                         System.out.println("received " + action + " for resource " + resource);
                         if (action == Action.ADDED || action == Action.MODIFIED) {
-                            cache.put(uid, resource);
+                            cache.put(name, resource);
+                            nodesByArchitecture.putIfAbsent(architecture, new HashSet<>()).add(resource);
                         } else if (action == Action.DELETED) {
-                            cache.remove(uid);
+                            nodesByArchitecture.get(architecture).remove(resource);
+                            cache.remove(name);
                         } else {
                             System.err.println("Received unexpected " + action + " event for " + resource);
                             System.exit(-1);
@@ -79,5 +123,23 @@ public class LocalNodeResourceCache {
             e.printStackTrace();
             System.exit(-1);
         }
+    }
+
+    private LocalNodeSpec convertSpec(RawExtension re) {
+        Map<String, String> map = (Map) re.getValue();
+        LocalNodeSpec lns = new LocalNodeSpec();
+        lns.setArchitecture(Architecture.valueOf(map.get("architecture")));
+        lns.setPassword(map.get("password"));
+        lns.setUsername(map.get("username"));
+        lns.setScaleDownProtected(Boolean.valueOf(map.getOrDefault("scaleDownProtected", "false")));
+        lns.setName(map.get("name"));
+        lns.setMacAddress(map.get("macAddress"));
+
+        return lns;
+    }
+
+    private boolean isRunning(String name) {
+        boolean n = client.nodes().list().getItems().stream().noneMatch(node -> node.getMetadata().getName().equals(name));
+        return !n;
     }
 }

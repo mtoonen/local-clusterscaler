@@ -11,7 +11,7 @@ public class WakeOnLan {
 
     private static final String BROADCAST_IP = "192.168.68.255";
 
-    public void wake(String macStr){
+    public void wake(String macStr) throws IOException {
 /*
         if (args.length != 2) {
             System.out.println("Usage: java WakeOnLan <broadcast-ip> <mac-address>");
@@ -20,7 +20,6 @@ public class WakeOnLan {
             System.exit(1);
         }*/
 
-        try {
             byte[] macBytes = getMacBytes(macStr);
             byte[] bytes = new byte[6 + 16 * macBytes.length];
             for (int i = 0; i < 6; i++) {
@@ -37,11 +36,7 @@ public class WakeOnLan {
             socket.close();
 
             System.out.println("Wake-on-LAN packet sent.");
-        }
-        catch (Exception e) {
-            System.out.println("Failed to send Wake-on-LAN packet: + e");
-            System.exit(1);
-        }
+
 
     }
 
