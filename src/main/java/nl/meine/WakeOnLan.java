@@ -11,6 +11,12 @@ public class WakeOnLan {
 
     private static final String BROADCAST_IP = "192.168.68.255";
 
+    public static void main(String [] args) throws IOException {
+        String mac = "7C:10:C9:B8:32:C5";
+        WakeOnLan wol = new WakeOnLan();
+        wol.wake(mac);
+
+    }
     public void wake(String macStr) throws IOException {
 /*
         if (args.length != 2) {

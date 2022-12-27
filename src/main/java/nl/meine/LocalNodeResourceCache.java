@@ -130,6 +130,7 @@ public class LocalNodeResourceCache {
         LocalNodeSpec lns = new LocalNodeSpec();
         lns.setArchitecture(Architecture.valueOf(map.get("architecture")));
         lns.setPassword(map.get("password"));
+        lns.setIpAddress(map.get("ipAddress"));
         lns.setUsername(map.get("username"));
         lns.setScaleDownProtected(Boolean.valueOf(map.getOrDefault("scaleDownProtected", "false")));
         lns.setName(map.get("name"));

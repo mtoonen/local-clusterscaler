@@ -5,6 +5,8 @@ import io.fabric8.kubernetes.api.model.KubernetesResource;
 public class LocalNodeSpec implements KubernetesResource {
 
     private String macAddress;
+
+    private String ipAddress;
     private String name;
 
     private Architecture architecture;
@@ -61,6 +63,14 @@ public class LocalNodeSpec implements KubernetesResource {
 
     public void setScaleDownProtected(boolean scaleDownProtected) {
         this.scaleDownProtected = scaleDownProtected;
+    }
+
+    public String getIpAddress() {
+        return ipAddress;
+    }
+
+    public void setIpAddress(String ipAddress) {
+        this.ipAddress = ipAddress;
     }
 
     @Override

@@ -5,7 +5,8 @@ metadata:
   name: apollo
 spec:
   name: apollo
-  macAddress: 192.168.68.118
+  macAddress: 7c:10:c9:b8:32:c5
+  ipAddress: 192.168.68.122
   architecture: amd64
-  username: waker
-  password: wakerpass
+  username: terminator
+  password: arnold

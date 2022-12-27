@@ -17,6 +17,8 @@ spec:
               properties:
                 macAddress:
                   type: string
+                ipAddress:
+                  type: string
                 name:
                   type: string
                 architecture:
