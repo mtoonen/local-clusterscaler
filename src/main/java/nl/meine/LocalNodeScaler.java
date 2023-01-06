@@ -16,6 +16,8 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -34,10 +36,23 @@ public class LocalNodeScaler {
     WakeOnLan wakeOnLan;
 
     public void podAdded(Pod pod) {
+        log.info("Cache status: " + cache.isReady());
+        if (cache.isReady()) {
+            doPodAdded(pod);
+        } else {
+            log.info("Cache not ready");
+            ScheduledThreadPoolExecutor exec = new ScheduledThreadPoolExecutor(1);
+
+            exec.schedule(() -> podAdded(pod), 1, TimeUnit.SECONDS);
+        }
+
+    }
+
+    private void doPodAdded(Pod pod) {
         log.info("Pod added");
         if (mustScaleUp(pod)) {
             scaleUp(pod);
-        }else{
+        } else {
             log.info("Sufficient resources");
         }
     }
@@ -50,13 +65,13 @@ public class LocalNodeScaler {
         log.info("Scaling up");
         LocalNode ln = getNodeToScale(pod);
         log.info("Scaling localnode: " + ln);
-        if(ln != null){
-            try{
+        if (ln != null) {
+            try {
                 wakeOnLan.wake(ln.getSpec().getMacAddress());
-            }catch(IOException e){
-                log.error("Cannot scale up node: ",e );
+            } catch (IOException e) {
+                log.error("Cannot scale up node: ", e);
             }
-        }else{
+        } else {
             log.error("Cannot scale due to too few available nodes");
         }
     }
@@ -92,7 +107,7 @@ public class LocalNodeScaler {
 
         log.info(String.format("Currently available on nodes: %f memory, %f cpu", totalMemoryNode.get(), totalCpuNode.get()));
 
-        if(mustScale(memoryToBeRequested, totalMemoryNode.get(), cpuToBeRequested, totalCpuNode.get())){
+        if (mustScale(memoryToBeRequested, totalMemoryNode.get(), cpuToBeRequested, totalCpuNode.get())) {
             return true;
         }
         return false;
@@ -101,7 +116,9 @@ public class LocalNodeScaler {
     private boolean checkArchitecture(Pod newPod) {
         Architecture architecture = Architecture.valueOf(newPod.getSpec().getNodeSelector().getOrDefault("kubernetes.io/arch", Architecture.arm64.toString()));
         Set<LocalNode> nodes = cache.getByArchitecture(architecture);
-
+        if (nodes.size() == 0) {
+            return false;
+        }
         double memoryToBeRequested = getPodResource(newPod, "memory").doubleValue();
         double cpuToBeRequested = getPodResource(newPod, "cpu").doubleValue();
 
@@ -109,7 +126,7 @@ public class LocalNodeScaler {
         AtomicReference<Double> totalMemoryNode = new AtomicReference<>(0.0);
         nodes.forEach(localNode -> {
             Node n = getNode(localNode.getSpec().getName());
-            if(n != null) {
+            if (n != null) {
                 totalMemoryNode.updateAndGet(v -> Double.valueOf((v + getAvailableResourceNode(n, "memory").doubleValue())));
                 totalCpuNode.updateAndGet(v -> Double.valueOf((v + getAvailableResourceNode(n, "cpu").doubleValue())));
             }
@@ -117,7 +134,7 @@ public class LocalNodeScaler {
 
         log.info(String.format("Currently available on specific nodes: %f memory, %f cpu", totalMemoryNode.get(), totalCpuNode.get()));
 
-        if(mustScale(memoryToBeRequested, totalMemoryNode.get(), cpuToBeRequested, totalCpuNode.get())){
+        if (mustScale(memoryToBeRequested, totalMemoryNode.get(), cpuToBeRequested, totalCpuNode.get())) {
             return true;
         }
         return false;
@@ -129,7 +146,7 @@ public class LocalNodeScaler {
             log.info("Memory insufficient");
             return true;
         }
-        if ((cpuAvailable- cpuRequested) < 0) {
+        if ((cpuAvailable - cpuRequested) < 0) {
             log.info("CPU insufficient");
             return true;
         }
@@ -161,7 +178,7 @@ public class LocalNodeScaler {
         Set<LocalNode> localNodes = cache.getByArchitecture(architecture);
         LocalNode nodeToScale = null;
         for (LocalNode ln : localNodes) {
-            if(!ln.getStatus().isRunning()){
+            if (!ln.getStatus().isRunning()) {
                 nodeToScale = ln;
             }
         }

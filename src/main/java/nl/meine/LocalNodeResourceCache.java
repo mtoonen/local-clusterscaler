@@ -12,6 +12,8 @@ import nl.meine.models.Architecture;
 import nl.meine.models.LocalNode;
 import nl.meine.models.LocalNodeSpec;
 import nl.meine.models.LocalNodeStatus;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -24,8 +26,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @ApplicationScoped
 public class LocalNodeResourceCache {
+    private static Log log = LogFactory.getLog(LocalNodeScaler.class);
+
+    private boolean ready = false;
 
     private final Map<String, LocalNode> cache = new ConcurrentHashMap<>();
+    private final Set<String> nodeUUIDs = new HashSet<>();
 
     private final Map<Architecture, Set<LocalNode>> nodesByArchitecture = new ConcurrentHashMap<>();
 
@@ -53,8 +59,16 @@ public class LocalNodeResourceCache {
                     .list()
                     .getItems()
                     .forEach(resource -> {
+
                                 String name = resource.getMetadata().getName();
 
+                                if (cache.containsKey(name)) {
+                                    int knownResourceVersion = Integer.parseInt(cache.get(name).getMetadata().getResourceVersion());
+                                    int receivedResourceVersion = Integer.parseInt(resource.getMetadata().getResourceVersion());
+                                    if (knownResourceVersion > receivedResourceVersion) {
+                                        return;
+                                    }
+                                }
                                 cache.put(name, resource);
                                 Object lnsObj = resource.getSpec();
                                 LocalNodeSpec lns = convertSpec((RawExtension) lnsObj);
@@ -67,9 +81,11 @@ public class LocalNodeResourceCache {
                                 Architecture architecture = lns.getArchitecture();
                                 nodesByArchitecture.putIfAbsent(architecture, new HashSet<>());
                                 nodesByArchitecture.get(architecture).add(resource);
-
+                                log.info("LocalNode added: " + name);
                             }
                     );
+            log.info("Initial loading of resources completed");
+            ready = true;
 
             // watch
 
@@ -132,7 +148,12 @@ public class LocalNodeResourceCache {
         lns.setPassword(map.get("password"));
         lns.setIpAddress(map.get("ipAddress"));
         lns.setUsername(map.get("username"));
-        lns.setScaleDownProtected(Boolean.valueOf(map.getOrDefault("scaleDownProtected", "false")));
+        if (map.containsKey("scaleDownProtected")) {
+            Object a = map.get("scaleDownProtected");
+            lns.setScaleDownProtected((boolean) a);
+        } else {
+            lns.setScaleDownProtected(false);
+        }
         lns.setName(map.get("name"));
         lns.setMacAddress(map.get("macAddress"));
 
@@ -142,5 +163,9 @@ public class LocalNodeResourceCache {
     private boolean isRunning(String name) {
         boolean n = client.nodes().list().getItems().stream().noneMatch(node -> node.getMetadata().getName().equals(name));
         return !n;
+    }
+
+    public boolean isReady() {
+        return ready;
     }
 }
