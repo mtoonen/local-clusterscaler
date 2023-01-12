@@ -125,10 +125,12 @@ public class LocalNodeScaler {
         AtomicReference<Double> totalCpuNode = new AtomicReference<>(0.0);
         AtomicReference<Double> totalMemoryNode = new AtomicReference<>(0.0);
         nodes.forEach(localNode -> {
-            Node n = getNode(localNode.getSpec().getName());
-            if (n != null) {
-                totalMemoryNode.updateAndGet(v -> Double.valueOf((v + getAvailableResourceNode(n, "memory").doubleValue())));
-                totalCpuNode.updateAndGet(v -> Double.valueOf((v + getAvailableResourceNode(n, "cpu").doubleValue())));
+            if(localNode.getStatus().isRunning()) {
+                Node n = getNode(localNode.getSpec().getName());
+                if (n != null) {
+                    totalMemoryNode.updateAndGet(v -> Double.valueOf((v + getAvailableResourceNode(n, "memory").doubleValue())));
+                    totalCpuNode.updateAndGet(v -> Double.valueOf((v + getAvailableResourceNode(n, "cpu").doubleValue())));
+                }
             }
         });
 

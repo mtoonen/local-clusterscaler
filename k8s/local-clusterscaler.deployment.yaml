@@ -14,7 +14,7 @@ spec:
     spec:
       serviceAccountName: local-clusterscaler
       containers:
-        - image: meinetoonen/local-clusterscaler
+        - image: meinetoonen/local-clusterscaler-aap:1.0
           name: local-clusterscaler
           imagePullPolicy: Always
           resources:

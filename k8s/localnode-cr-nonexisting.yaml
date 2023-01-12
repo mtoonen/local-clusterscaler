@@ -5,7 +5,7 @@ metadata:
   name: ikbestaniet
 spec:
   name: ikbestaniet
-  macAddress: 192.168.68.118
+  macAddress: 192.168.68.666
   architecture: amd64
   username: waker
   password: wakerpass

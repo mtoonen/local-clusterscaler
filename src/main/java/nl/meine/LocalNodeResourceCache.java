@@ -17,6 +17,10 @@ import org.apache.commons.logging.LogFactory;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -75,7 +79,7 @@ public class LocalNodeResourceCache {
                                 resource.setSpec(lns);
 
                                 LocalNodeStatus status = new LocalNodeStatus();
-                                status.setRunning(isRunning(name));
+                                status.setRunning(isRunning(lns));
                                 resource.setStatus(status);
 
                                 Architecture architecture = lns.getArchitecture();
@@ -100,7 +104,7 @@ public class LocalNodeResourceCache {
                         String name = resource.getSpec().getName();
 
                         LocalNodeStatus status = new LocalNodeStatus();
-                        status.setRunning(isRunning(name));
+                        status.setRunning(isRunning(lns));
                         resource.setStatus(status);
 
                         Architecture architecture = resource.getSpec().getArchitecture();
@@ -160,9 +164,29 @@ public class LocalNodeResourceCache {
         return lns;
     }
 
-    private boolean isRunning(String name) {
-        boolean n = client.nodes().list().getItems().stream().noneMatch(node -> node.getMetadata().getName().equals(name));
-        return !n;
+    private boolean isRunning(LocalNodeSpec node) {
+//        boolean n = client.nodes().list().getItems().stream().anyMatch(node -> node.getMetadata().getName().equals(name));
+        String ip = node.getIpAddress();
+        try {
+
+            String[] nums= ip.split("\\.");
+            byte[] addr = new byte[4];
+            for (int i = 0 ; i < 4 ;i++) {
+                addr[i] = Integer.valueOf(nums[i]).byteValue();
+            }
+            InetAddress address = InetAddress.getByAddress(addr);
+            boolean reachable = address.isReachable(1000);
+            return reachable;
+        } catch (Exception e) {
+            log.error("Error pinging server " + node.getName(), e);
+            return false;
+        }
+
+    }
+
+    public static void main(String[] args) throws IOException {
+        InetAddress address = InetAddress.getByName("192.168.68.122");
+        System.out.println( address.isReachable(1000));
     }
 
     public boolean isReady() {
