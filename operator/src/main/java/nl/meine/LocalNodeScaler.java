@@ -33,7 +33,7 @@ public class LocalNodeScaler {
     LocalNodeResourceCache cache;
 
     @Inject
-    WakeOnLan wakeOnLan;
+    ScalerClient scaler;
 
     public void podAdded(Pod pod) {
         log.info("Cache status: " + cache.isReady());
@@ -66,11 +66,7 @@ public class LocalNodeScaler {
         LocalNode ln = getNodeToScale(pod);
         log.info("Scaling localnode: " + ln);
         if (ln != null) {
-            try {
-                wakeOnLan.wake(ln.getSpec().getMacAddress());
-            } catch (IOException e) {
-                log.error("Cannot scale up node: ", e);
-            }
+            scaler.up(ln);
         } else {
             log.error("Cannot scale due to too few available nodes");
         }
