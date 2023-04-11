@@ -54,3 +54,25 @@ If you want to learn more about building native executables, please consult http
 Easily start your Reactive RESTful Web Services
 
 [Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
+
+
+
+# Install platform thingies
+
+## On odroid
+install microk8s, install dns, hostpath-storage
+
+```
+helm install keda kedacore/keda --namespace keda --values values.yaml
+```
+## On P52
+Install microk8s, install dns, hostpath-storage.
+
+## Add p52 as workernode
+in odroid, do microk8s add-node. Copy first command
+In p52 execute command in clipboard. 
+
+## Install http scaler
+```
+helm install http-add-on kedacore/keda-add-ons-http --namespace keda --values values.yaml
+```

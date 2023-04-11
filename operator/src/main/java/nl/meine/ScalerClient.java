@@ -5,6 +5,7 @@ import nl.meine.models.LocalNode;
 import nl.meine.models.LocalNodeSpec;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -23,7 +24,12 @@ import java.util.Map;
 @ApplicationScoped
 public class ScalerClient {
 
-    public  String endpoint = "192.168.68.117";
+    @Inject
+    private WakeOnLan waker;
+
+    @Inject
+    private NodeTerminator arnold;
+    public  String endpoint = "192.168.68.117:8080";
 
     public static void main(String[] args) {
         String mac = "7C:10:C9:B8:32:C5";
@@ -39,10 +45,12 @@ public class ScalerClient {
     public String up(LocalNode ln){
         URL url = null;
         try {
-            Map<String, String> parameters = new HashMap<>();
-            parameters.put("macAddress", ln.getSpec().getMacAddress());
+//
+//            Map<String, String> parameters = new HashMap<>();
+//            parameters.put("macAddress", ln.getSpec().getMacAddress());
 
-
+            waker.wake(ln.getSpec().getMacAddress());
+            /*
             String params = ParameterStringBuilder.getParamsString(parameters);
             url = new URL("http://" + endpoint + "/scaler/up?"+params);
             System.out.println(url.toString());
@@ -57,8 +65,8 @@ public class ScalerClient {
                 }
             }
             String s = result.toString();
-            System.out.println(s);
-            return s;
+            System.out.println(s);*/
+            return "maybe";
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         } catch (ProtocolException e) {
@@ -69,8 +77,8 @@ public class ScalerClient {
     }
 
 
-    public void down(LocalNode ln){
-
+    public void down(LocalNode ln) throws Exception {
+        arnold.shutdown(ln.getSpec().getUsername(),ln.getSpec().getPassword(), ln.getSpec().getIpAddress(), 22);
     }
 
     public class ParameterStringBuilder {

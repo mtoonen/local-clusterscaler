@@ -5,7 +5,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: local-clusterscaler
-    namespace: default
+    namespace: media
 roleRef:
   kind: ClusterRole
   name: local-clusterscaler

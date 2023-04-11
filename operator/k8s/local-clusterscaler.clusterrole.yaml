@@ -13,5 +13,12 @@ rules:
       - ""
     resources:
       - pods
+      - nodes
     verbs:
-      - list
+      - "*"
+  - apiGroups:
+      - meinetoonen.nl
+    resources:
+      - localnodes
+    verbs:
+      - "*"

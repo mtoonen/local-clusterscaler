@@ -12,6 +12,7 @@ import org.apache.commons.logging.LogFactory;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
@@ -27,6 +28,7 @@ public class LocalNodeScaler {
     private static Log log = LogFactory.getLog(LocalNodeScaler.class);
 
     @Inject
+    @Named("nodewatcher")
     KubernetesClient client;
 
     @Inject
@@ -92,7 +94,9 @@ public class LocalNodeScaler {
     private boolean checkGlobal(Pod newPod) {
         double memoryToBeRequested = getPodResource(newPod, "memory").doubleValue();
         double cpuToBeRequested = getPodResource(newPod, "cpu").doubleValue();
-        log.info(String.format("Pod %s requesting %f cpu and %f memory.", newPod.getMetadata().getName(), cpuToBeRequested, memoryToBeRequested));
+        Architecture architecture = Architecture.valueOf(newPod.getSpec().getNodeSelector().getOrDefault("kubernetes.io/arch", Architecture.arm64.toString()));
+
+        log.info(String.format("Pod %s requesting %f cpu and %f memory on architecture %s.", newPod.getMetadata().getName(), cpuToBeRequested, memoryToBeRequested, architecture));
 
         AtomicReference<Double> totalCpuNode = new AtomicReference<>(0.0);
         AtomicReference<Double> totalMemoryNode = new AtomicReference<>(0.0);
@@ -121,7 +125,7 @@ public class LocalNodeScaler {
         AtomicReference<Double> totalCpuNode = new AtomicReference<>(0.0);
         AtomicReference<Double> totalMemoryNode = new AtomicReference<>(0.0);
         nodes.forEach(localNode -> {
-            if(localNode.getStatus().isRunning()) {
+            if (localNode.getStatus().isRunning()) {
                 Node n = getNode(localNode.getSpec().getName());
                 if (n != null) {
                     totalMemoryNode.updateAndGet(v -> Double.valueOf((v + getAvailableResourceNode(n, "memory").doubleValue())));
@@ -130,7 +134,7 @@ public class LocalNodeScaler {
             }
         });
 
-        log.info(String.format("Currently available on specific nodes: %f memory, %f cpu", totalMemoryNode.get(), totalCpuNode.get()));
+        log.info(String.format("Currently available on nodes with arch %s: %f memory, %f cpu", architecture, totalMemoryNode.get(), totalCpuNode.get()));
 
         if (mustScale(memoryToBeRequested, totalMemoryNode.get(), cpuToBeRequested, totalCpuNode.get())) {
             return true;

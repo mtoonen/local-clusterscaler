@@ -42,9 +42,6 @@ public class LocalNodeResourceCache {
     @Inject
     MixedOperation<LocalNode, KubernetesResourceList<LocalNode>, Resource<LocalNode>> localNodeClient;
 
-    @Inject
-    KubernetesClient client;
-
     public LocalNode get(String uid) {
         return cache.get(uid);
     }
@@ -85,7 +82,7 @@ public class LocalNodeResourceCache {
                                 Architecture architecture = lns.getArchitecture();
                                 nodesByArchitecture.putIfAbsent(architecture, new HashSet<>());
                                 nodesByArchitecture.get(architecture).add(resource);
-                                log.info("LocalNode added: " + name);
+                                log.info("LocalNode added: " + name + ", with architecture: " + architecture.toString());
                             }
                     );
             log.info("Initial loading of resources completed");

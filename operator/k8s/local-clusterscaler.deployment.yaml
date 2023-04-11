@@ -12,9 +12,11 @@ spec:
       labels:
         app: local-clusterscaler
     spec:
+      nodeSelector:
+        kubernetes.io/arch: arm64
       serviceAccountName: local-clusterscaler
       containers:
-        - image: meinetoonen/local-clusterscaler-aap:1.0
+        - image: meinetoonen/local-clusterscaler:latest
           name: local-clusterscaler
           imagePullPolicy: Always
           resources:

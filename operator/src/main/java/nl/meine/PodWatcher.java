@@ -19,7 +19,7 @@ public class PodWatcher {
 
     private static Log log = LogFactory.getLog(PodWatcher.class);
 
-    @Inject
+    @Named("podClient")
     KubernetesClient client;
 
     @Inject
@@ -28,7 +28,7 @@ public class PodWatcher {
     @Inject
     LocalNodeScaler scaler;
 
-    @Named("namespace") String namespace;
+    @Named("mediaNamespace") String namespace;
 
     void onStartup(@Observes StartupEvent _ev) {
         cache.listThenWatch();
@@ -36,10 +36,12 @@ public class PodWatcher {
     }
 
     public void podWatcher() {
-        cache.listThenWatch();
+        log.error("lalala, niewu");
+
+        log.error("Current running pods in 1" + namespace);
         List<Pod> pods = client.pods().inNamespace(namespace).list().getItems();
 
-        log.debug("Current running pods in " + namespace);
+        log.error("Current running pods in 2" + namespace);
         for (Pod pod: pods) {
             log.debug("" + pod.getMetadata().getName());
         }
