@@ -25,7 +25,7 @@ public class ClientProvider {
         try {
             return new String(Files.readAllBytes(Paths.get("/var/run/secrets/kubernetes.io/serviceaccount/namespace")));
         } catch (Exception e) {
-            return "default";
+            return "media";
         }
     }
 

@@ -3,6 +3,7 @@ package nl.meine;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.Node;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.metrics.v1beta1.NodeMetrics;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import nl.meine.models.Architecture;
@@ -59,8 +60,34 @@ public class LocalNodeScaler {
         }
     }
 
-    public void podRemoved(Pod pod) {
+    public void podRemoved(Pod pod){
         log.info("Pod removed");
+        String owningNodeName = pod.getSpec().getNodeName();
+        int a = 0;
+
+        List<Pod> podsWithRequestedArchitecture = client
+                .pods()
+                .inAnyNamespace()
+                .withField("spec.nodeName", owningNodeName)
+                .list().getItems().stream()
+                .filter(p -> p.getSpec().getNodeSelector().get("kubernetes.io/arch") != null)
+                .toList();
+
+//        if(podsWithRequestedArchitecture.isEmpty()){
+        if(true){
+            log.info(String.format("No more pods needed explicitely on node %s. Shutdown node %s", owningNodeName, owningNodeName));
+            LocalNode ln = cache.get(owningNodeName);
+            try {
+                scaler.down(ln);
+            } catch (Exception e) {
+                log.error("Cannot scale down node " + owningNodeName, e);
+            }
+        }else{
+            String pods = podsWithRequestedArchitecture.stream().map(pod1 -> pod1.getMetadata().getName()).collect(Collectors.joining(","));
+            log.info(String.format("Pods existing on node %s that requested the architecture of the node: %s", owningNodeName, pods));
+        }
+
+        int b = 1;
     }
 
     private void scaleUp(Pod pod) {
@@ -74,9 +101,6 @@ public class LocalNodeScaler {
         }
     }
 
-    private void scaleDown() {
-        log.info("Scaling down");
-    }
 
     private boolean mustScaleUp(Pod newPod) {
 
@@ -116,7 +140,7 @@ public class LocalNodeScaler {
     private boolean checkArchitecture(Pod newPod) {
         Architecture architecture = Architecture.valueOf(newPod.getSpec().getNodeSelector().getOrDefault("kubernetes.io/arch", Architecture.arm64.toString()));
         Set<LocalNode> nodes = cache.getByArchitecture(architecture);
-        if (nodes.size() == 0) {
+        if (nodes == null || nodes.size() == 0) {
             return false;
         }
         double memoryToBeRequested = getPodResource(newPod, "memory").doubleValue();
@@ -164,8 +188,11 @@ public class LocalNodeScaler {
     private BigDecimal getPodResource(Pod pod, String resource) {
         BigDecimal total = new BigDecimal(0.0);
         for (Container c : pod.getSpec().getContainers()) {
-            BigDecimal temp = c.getResources().getRequests().get(resource).getNumericalAmount();
-            total = total.add(temp);
+            Quantity q = c.getResources().getRequests().get(resource);
+            if (q != null) {
+                BigDecimal temp = q.getNumericalAmount();
+                total = total.add(temp);
+            }
         }
         return total;
     }

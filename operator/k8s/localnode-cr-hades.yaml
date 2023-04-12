@@ -6,7 +6,7 @@ metadata:
 spec:
   name: hades
   macAddress: 00:1e:06:43:6b:53
-  ipAddress: 192.168.68.117
+  ipAddress: 192.168.68.100
   architecture: arm64
   username: terminator
   password: arnold

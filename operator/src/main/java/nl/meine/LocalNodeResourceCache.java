@@ -50,6 +50,11 @@ public class LocalNodeResourceCache {
         return nodesByArchitecture.get(arch);
     }
 
+    public void setLocalNodeRunning(LocalNode ln, boolean running){
+        this.cache.get(ln.getSpec().getName()).getStatus().setRunning(running);
+        this.nodesByArchitecture.get(ln.getSpec().getArchitecture()).stream().filter(localNode -> localNode.getSpec().getName().equals(ln.getSpec().getName())).findFirst().get().getStatus().setRunning(running);
+    }
+
     public void listThenWatch() {
 
         try {

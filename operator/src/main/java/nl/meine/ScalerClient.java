@@ -29,6 +29,10 @@ public class ScalerClient {
 
     @Inject
     private NodeTerminator arnold;
+
+    @Inject
+    private LocalNodeResourceCache cache;
+
     public  String endpoint = "192.168.68.117:8080";
 
     public static void main(String[] args) {
@@ -50,6 +54,7 @@ public class ScalerClient {
 //            parameters.put("macAddress", ln.getSpec().getMacAddress());
 
             waker.wake(ln.getSpec().getMacAddress());
+            cache.setLocalNodeRunning(ln, true);
             /*
             String params = ParameterStringBuilder.getParamsString(parameters);
             url = new URL("http://" + endpoint + "/scaler/up?"+params);
@@ -79,6 +84,7 @@ public class ScalerClient {
 
     public void down(LocalNode ln) throws Exception {
         arnold.shutdown(ln.getSpec().getUsername(),ln.getSpec().getPassword(), ln.getSpec().getIpAddress(), 22);
+        cache.setLocalNodeRunning(ln, false);
     }
 
     public class ParameterStringBuilder {

@@ -2,5 +2,8 @@ Test verwijderen van custom resource node
 
 fix opstarten van scaler, dat er dan niet geschaald wordt
 
-
+Wegschrijven van status van localnodes:
+    isrunning
+    periodiek isrunning checken
+    isrunning updaten bij scalen
 downscale

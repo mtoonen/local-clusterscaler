@@ -37,6 +37,7 @@ public class PodWatcher {
 
     public void podWatcher() {
         log.error("lalala, niewu");
+        cache.listThenWatch();
 
         log.error("Current running pods in 1" + namespace);
         List<Pod> pods = client.pods().inNamespace(namespace).list().getItems();
