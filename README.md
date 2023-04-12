@@ -16,9 +16,36 @@ In scaler folder in this repo:
 ```
 mvn clean install
 ```
-Copy jar file to hades, and run with:
+Copy jar file to hades: /home/meine/scaler/scaler.jar.
+Create systemd unit in /etc/systemd/system/scaler/service:
+
 ```shell
-(java -jar scaler-0.0.1-SNAPSHOT.jar &)
+  GNU nano 6.2                                                                                                                                         scaler.service                                                                                                                                                  
+[Unit]
+Description=Scaling service
+After=syslog.target network.target
+
+[Service]
+SuccessExitStatus=143
+
+User=meine
+Group=meine
+
+Type=simple
+
+WorkingDirectory=/home/meine/scaler
+ExecStart=/home/meine/.sdkman/candidates/java/current/bin/java -jar scaler.jar
+ExecStop=/bin/kill -15 $MAINPID
+
+[Install]
+WantedBy=multi-user.target
+
+```
+
+Enable/run with:
+```shell
+sudo systemctl daemon-reload
+sudo systemctl start scaler.service
 ```
 ## On P52
 Install k3s
