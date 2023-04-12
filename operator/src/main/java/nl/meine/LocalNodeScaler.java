@@ -73,8 +73,7 @@ public class LocalNodeScaler {
                 .filter(p -> p.getSpec().getNodeSelector().get("kubernetes.io/arch") != null)
                 .toList();
 
-//        if(podsWithRequestedArchitecture.isEmpty()){
-        if(true){
+        if(podsWithRequestedArchitecture.isEmpty()){
             log.info(String.format("No more pods needed explicitely on node %s. Shutdown node %s", owningNodeName, owningNodeName));
             LocalNode ln = cache.get(owningNodeName);
             try {
