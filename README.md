@@ -1,78 +1,58 @@
-# local-clusterscaler Project
-
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
-
-If you want to learn more about Quarkus, please visit its website: https://quarkus.io/ .
-
-## Running the application in dev mode
-
-You can run your application in dev mode that enables live coding using:
-```shell script
-./mvnw compile quarkus:dev
-```
-
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at http://localhost:8080/q/dev/.
-
-## Packaging and running the application
-
-The application can be packaged using:
-```shell script
-./mvnw package
-```
-It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/quarkus-app/lib/` directory.
-
-The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
-
-If you want to build an _über-jar_, execute the following command:
-```shell script
-./mvnw package -Dquarkus.package.type=uber-jar
-```
-
-The application, packaged as an _über-jar_, is now runnable using `java -jar target/*-runner.jar`.
-
-## Creating a native executable
-
-You can create a native executable using: 
-```shell script
-./mvnw package -Pnative
-```
-
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using: 
-```shell script
-./mvnw package -Pnative -Dquarkus.native.container-build=true
-```
-
-You can then execute your native executable with: `./target/local-clusterscaler-1.0.0-SNAPSHOT-runner`
-
-If you want to learn more about building native executables, please consult https://quarkus.io/guides/maven-tooling.
-
-## Provided Code
-
-### RESTEasy Reactive
-
-Easily start your Reactive RESTful Web Services
-
-[Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
-
-
+# Overview
+![C4 Model outlining the architecture of the solution](docs/c4.png "Title")
 
 # Install platform thingies
 
 ## On odroid
-install microk8s, install dns, hostpath-storage
+install k3s
 
 ```
 helm install keda kedacore/keda --namespace keda --values values.yaml
 ```
-## On P52
-Install microk8s, install dns, hostpath-storage.
 
-## Add p52 as workernode
-in odroid, do microk8s add-node. Copy first command
-In p52 execute command in clipboard. 
+
+### Run scaler 
+In scaler folder in this repo:
+```
+mvn clean install
+```
+Copy jar file to hades, and run with:
+```shell
+(java -jar scaler-0.0.1-SNAPSHOT.jar &)
+```
+## On P52
+Install k3s
+
+### Add p52 as workernode
+
+
+```
+curl -sfL https://get.k3s.io | K3S_URL=https://myserver:6443 K3S_TOKEN=mynodetoken sh -
+```
+
+Setting the K3S_URL parameter causes the installer to configure K3s as an agent, instead of a server. The K3s agent will register with the K3s server listening at the supplied URL. 
+The value to use for K3S_TOKEN is stored at /var/lib/rancher/k3s/server/node-token on hades.
+
 
 ## Install http scaler
 ```
 helm install http-add-on kedacore/keda-add-ons-http --namespace keda --values values.yaml
+```
+
+# Install clusterscaler
+
+Install Custom Resource Definition, Custom Resources, serviceaccount, clusterrole, clusterrolebindings
+```shell
+kubectl apply -f localnode-crd.yaml
+kubectl apply -n media -f localnode-cr-apollo.yaml
+kubectl apply -n media -f localnode-cr-hades.yaml
+kubectl apply -n media -f local-clusterscaler.serviceaccount.yaml
+kubectl apply -n media -f local-clusterscaler.clusterrole.yaml
+kubectl apply -n media -f local-clusterscaler.clusterrolebinding.yaml
+kubectl apply -n media -f local-clusterscaler.
+```
+
+Finally install the clusterscaler:
+```shell
+kubectl apply -n media -f local-clusterscaler.deployment.yaml
 ```
