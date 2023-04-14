@@ -72,7 +72,7 @@ public class ScalerClient {
 
 
     public void down(LocalNode ln) throws Exception {
-        arnold.shutdown(ln.getSpec().getUsername(), ln.getSpec().getPassword(), ln.getSpec().getIpAddress(), 22);
+        arnold.shutdown(ln.getSpec().getUsername(), ln.getSpec().getPassword(), ln.getSpec().getIpAddress(), 22, ln.getSpec().getName());
         cache.setLocalNodeRunning(ln, false);
     }
 

@@ -208,6 +208,7 @@ public class LocalNodeScaler {
         for (LocalNode ln : localNodes) {
             if (!ln.getStatus().isRunning()) {
                 nodeToScale = ln;
+                break;
             }
         }
         return nodeToScale;
