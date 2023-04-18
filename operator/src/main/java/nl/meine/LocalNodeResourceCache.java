@@ -1,13 +1,12 @@
 package nl.meine;
 
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
-import io.fabric8.kubernetes.api.model.Node;
 import io.fabric8.kubernetes.api.model.runtime.RawExtension;
-import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.WatcherException;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
+import io.fabric8.kubernetes.client.informers.ResourceEventHandler;
 import nl.meine.models.Architecture;
 import nl.meine.models.LocalNode;
 import nl.meine.models.LocalNodeSpec;
@@ -19,23 +18,18 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @ApplicationScoped
 public class LocalNodeResourceCache {
-    private static Log log = LogFactory.getLog(LocalNodeScaler.class);
+    private final static Log log = LogFactory.getLog(LocalNodeScaler.class);
 
     private boolean ready = false;
 
     private final Map<String, LocalNode> cache = new ConcurrentHashMap<>();
-    private final Set<String> nodeUUIDs = new HashSet<>();
 
     private final Map<Architecture, Set<LocalNode>> nodesByArchitecture = new ConcurrentHashMap<>();
 
@@ -93,12 +87,11 @@ public class LocalNodeResourceCache {
             log.info("Initial loading of resources completed");
             ready = true;
 
-            // watch
-
             localNodeClient.watch(new Watcher<LocalNode>() {
                 @Override
                 public void eventReceived(Action action, LocalNode resource) {
                     try {
+                        System.out.println("received " + action + " for resource " + resource);
                         Object lnsObj = resource.getSpec();
                         LocalNodeSpec lns = convertSpec((RawExtension) lnsObj);
                         resource.setSpec(lns);
@@ -117,7 +110,6 @@ public class LocalNodeResourceCache {
                                 return;
                             }
                         }
-                        System.out.println("received " + action + " for resource " + resource);
                         if (action == Action.ADDED || action == Action.MODIFIED) {
                             cache.put(name, resource);
                             nodesByArchitecture.putIfAbsent(architecture, new HashSet<>()).add(resource);
@@ -139,7 +131,6 @@ public class LocalNodeResourceCache {
                     cause.printStackTrace();
                     System.exit(-1);
                 }
-
             });
         } catch (Exception e) {
             e.printStackTrace();
